@@ -10,3 +10,7 @@ Type in your playerID (`world.player.playerId` in box critters javascript consol
 
 Move around and watch your critter follow you
 
+### Notes
+
+It appears as if box critters mutes your critter if there's more than 1 active sesion per IP. 
+

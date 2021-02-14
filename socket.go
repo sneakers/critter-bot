@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -43,31 +42,53 @@ func messageListener(c *websocket.Conn) {
 		_, message, _ := c.ReadMessage()
 		msg := string(message)
 
-		if msg == "2" {
+		if msg == "" {
+			continue
+		}
+
+		if msg == "2" { // Server ping
 			c.WriteMessage(websocket.TextMessage, []byte("3"))
 			continue
 		}
-		if strings.Contains(msg, `42["X",`) {
-			msg = msg[7 : len(msg)-1]
-			var i map[string]interface{}
-			json.Unmarshal([]byte(msg), &i)
 
-			movePlayer(c, i)
+		switch string(msg[4]) {
+		case "X":
+			movePlayer(c, msg)
+			continue
+		case "M":
+			sendMessage(c, msg)
 			continue
 		}
 	}
 }
 
-func movePlayer(c *websocket.Conn, info map[string]interface{}) {
+func movePlayer(c *websocket.Conn, msg string) {
+	msg = msg[7 : len(msg)-1]
+	var info map[string]interface{}
+	json.Unmarshal([]byte(msg), &info)
+
 	if info["i"] != playerID {
 		return
 	}
 
-	x := info["x"].(float64) - 10
+	x := info["x"].(float64) - 30
 	y := info["y"].(float64)
 
 	xStr := strconv.Itoa(int(x))
 	yStr := strconv.Itoa(int(y))
 
 	c.WriteMessage(websocket.TextMessage, []byte(`42["moveTo", `+xStr+`, `+yStr+`]`))
+}
+
+func sendMessage(c *websocket.Conn, msg string) {
+	msg = msg[7 : len(msg)-1]
+	var info map[string]interface{}
+	json.Unmarshal([]byte(msg), &info)
+
+	if info["i"] != playerID {
+		return
+	}
+
+	msg = info["m"].(string)
+	c.WriteMessage(websocket.TextMessage, []byte(`42["message", "`+msg+`"]`))
 }
