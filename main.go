@@ -3,15 +3,23 @@ package main
 var playerID string
 
 func main() {
-	sessionTicket := doAuth()
-	playerID = askForInput("Player ID to follow:")
-	socket := createConnection()
-	socket.ReadMessage() // For the initial SID message
+	prevID := askForInput("Player ID to follow:")
+	critters := getAccounts()
 
-	doLogin(socket, sessionTicket)
+	for _, crit := range critters {
+		crit := crit
+		crit.login()
 
-	go messageListener(socket)
+		if crit.LoginSuccess == false {
+			continue
+		}
 
-	for {
+		crit.FollowingID = prevID
+		crit.joinGame()
+		go crit.listener()
+
+		prevID = crit.PlayerID
 	}
+
+	select {}
 }
