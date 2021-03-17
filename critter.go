@@ -127,7 +127,7 @@ func (c *critter) move(msg string) {
 func (c *critter) sendMessage(msg string) {
 	info := socketMessageToMap(msg)
 
-	if info["i"] != playerID {
+	if info["i"] != c.FollowingID {
 		return
 	}
 
